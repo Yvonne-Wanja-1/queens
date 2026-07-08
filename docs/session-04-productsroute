@@ -1,0 +1,484 @@
+
+
+# Queens' Touch Beauty Shop
+
+# Backend Developer Notes
+
+## Session 4 – Creating Our First Route
+
+**Date:** 8 July 2026
+
+---
+
+# Objective
+
+The objective of this session was to create the first API route using Express Router and connect it to the Express application.
+
+This introduces route organization, making the backend easier to maintain as it grows.
+
+---
+
+# Why We Need Routes
+
+As the application grows, we will have many endpoints.
+
+For example:
+
+```text
+GET /products
+GET /products/:id
+POST /products
+PUT /products/:id
+DELETE /products/:id
+```
+
+If every route were placed inside `app.js`, the file would become very large and difficult to maintain.
+
+Instead, Express allows us to organize routes into separate files based on their purpose.
+
+---
+
+# Step 1 – Create `productRoutes.js`
+
+Inside the `routes` folder, create a new file named:
+
+```text
+backend/
+└── src/
+    └── routes/
+        └── productRoutes.js
+```
+
+The project structure now becomes:
+
+```text
+backend/
+│
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   │   └── productRoutes.js
+│   ├── services/
+│   ├── utils/
+│   └── app.js
+│
+├── package.json
+├── package-lock.json
+└── server.js
+```
+
+---
+
+# Why Create a Separate Routes File?
+
+Each feature in the application should have its own routes file.
+
+Examples:
+
+```text
+routes/
+├── productRoutes.js
+├── authRoutes.js
+├── orderRoutes.js
+├── paymentRoutes.js
+├── reviewRoutes.js
+├── customerRoutes.js
+```
+
+This keeps the project organized and makes it easier to locate and manage routes related to a specific feature.
+
+---
+
+# What is an Express Router?
+
+An Express Router is a mini version of an Express application.
+
+Instead of placing every route inside `app.js`, each router is responsible for handling routes related to one feature.
+
+For this project, `productRoutes.js` will handle all product-related requests.
+
+---
+
+# Beauty Shop Analogy
+
+Imagine a customer enters the beauty shop.
+
+Instead of one employee handling every task, there are different departments.
+
+```text
+Reception
+     │
+ ┌───┼────────┐
+ │   │        │
+ ▼   ▼        ▼
+Products Orders Customers
+```
+
+Each department has its own receptionist.
+
+In Express, each department is represented by a Router.
+
+---
+
+# Step 2 – Create the Product Router
+
+Open:
+
+```text
+backend/src/routes/productRoutes.js
+```
+
+Paste the following code:
+
+```javascript
+const express = require("express");
+
+const router = express.Router();
+
+// GET /products
+router.get("/", (req, res) => {
+  res.json({
+    message: "List of products will appear here."
+  });
+});
+
+module.exports = router;
+```
+
+---
+
+# Code Explanation
+
+## Import Express
+
+```javascript
+const express = require("express");
+```
+
+Imports the Express framework into the file.
+
+---
+
+## Create a Router
+
+```javascript
+const router = express.Router();
+```
+
+Creates a new Express Router.
+
+Unlike `app.js`, this is **not** the entire application.
+
+It only manages product-related routes.
+
+---
+
+## Create the First Route
+
+```javascript
+router.get("/", (req, res) => {
+```
+
+Creates a GET endpoint.
+
+Notice we use:
+
+```javascript
+router.get()
+```
+
+instead of
+
+```javascript
+app.get()
+```
+
+because this file represents a Router, not the entire application.
+
+---
+
+## Send a JSON Response
+
+```javascript
+res.json({
+  message: "List of products will appear here."
+});
+```
+
+Returns a JSON response to the client.
+
+Expected response:
+
+```json
+{
+  "message": "List of products will appear here."
+}
+```
+
+JSON is the standard format used for communication between the backend and frontend.
+
+---
+
+## Export the Router
+
+```javascript
+module.exports = router;
+```
+
+Exports the Router so it can be imported into another file.
+
+In our project, it will be imported into `app.js`.
+
+---
+
+# Step 3 – Import the Router into `app.js`
+
+Open:
+
+```text
+backend/src/app.js
+```
+
+At the top of the file, after importing Express, add:
+
+```javascript
+const productRoutes = require("./routes/productRoutes");
+```
+
+---
+
+# Code Explanation
+
+```javascript
+const productRoutes = require("./routes/productRoutes");
+```
+
+This imports the Router from `productRoutes.js`.
+
+Breaking it down:
+
+* `./` → start in the current folder (`src`)
+* `routes` → enter the `routes` folder
+* `productRoutes` → load `productRoutes.js`
+
+Node.js automatically finds the `.js` file, so the extension is omitted.
+
+---
+
+# Step 4 – Register the Router
+
+After:
+
+```javascript
+app.use(express.json());
+```
+
+add:
+
+```javascript
+app.use("/products", productRoutes);
+```
+
+The updated `app.js` becomes:
+
+```javascript
+const express = require("express");
+const productRoutes = require("./routes/productRoutes");
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+
+// Product routes
+app.use("/products", productRoutes);
+
+// Home route
+app.get("/", (req, res) => {
+  res.send("Welcome to Queens' Touch Beauty Shop API! 🚀");
+});
+
+module.exports = app;
+```
+
+---
+
+# What Does `app.use("/products", productRoutes)` Do?
+
+This line tells Express:
+
+> "Whenever a request starts with `/products`, send it to the `productRoutes` Router."
+
+This connects the Router to the main application.
+
+Without this line, Express would never use the routes defined in `productRoutes.js`.
+
+---
+
+# How Express Builds the Final Route
+
+Inside `productRoutes.js`, we wrote:
+
+```javascript
+router.get("/");
+```
+
+Inside `app.js`, we registered:
+
+```javascript
+app.use("/products", productRoutes);
+```
+
+Express combines both parts.
+
+```text
+app.use("/products", ...)
++
+router.get("/")
+=
+GET /products
+```
+
+This is why visiting:
+
+```text
+http://localhost:3000/products
+```
+
+executes the route inside `productRoutes.js`.
+
+---
+
+# Step 5 – Test the Route
+
+Start the server:
+
+```bash
+node server.js
+```
+
+Expected terminal output:
+
+```text
+Server is running on http://localhost:3000
+```
+
+---
+
+Open:
+
+```text
+http://localhost:3000/
+```
+
+Expected result:
+
+```text
+Welcome to Queens' Touch Beauty Shop API! 🚀
+```
+
+---
+
+Open:
+
+```text
+http://localhost:3000/products
+```
+
+Expected result:
+
+```json
+{
+  "message": "List of products will appear here."
+}
+```
+
+This confirms that the Router has been successfully connected to the Express application.
+
+---
+
+# How a Request Travels Through the Application
+
+When a user visits:
+
+```text
+http://localhost:3000/products
+```
+
+the request follows this path:
+
+```text
+Browser / Flutter App
+          │
+          ▼
+      server.js
+          │
+          ▼
+       app.js
+          │
+          ▼
+app.use("/products", productRoutes)
+          │
+          ▼
+productRoutes.js
+          │
+          ▼
+router.get("/")
+          │
+          ▼
+JSON Response
+```
+
+---
+
+# Concepts Learned
+
+* Express Router
+* Route organization
+* `express.Router()`
+* `router.get()`
+* `app.use()`
+* Importing files with `require()`
+* Exporting with `module.exports`
+* Route prefixes
+* JSON responses
+* Request flow through an Express application
+
+---
+
+# Final Project Structure
+
+```text
+backend/
+│
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   │   └── productRoutes.js
+│   ├── services/
+│   ├── utils/
+│   └── app.js
+│
+├── package.json
+├── package-lock.json
+└── server.js
+```
+
+---
+
+# Key Takeaways
+
+* Create a separate Router for each major feature of the application.
+* Keep `app.js` responsible for connecting Routers, not storing every route.
+* Use `express.Router()` to group related endpoints.
+* Register Routers using `app.use()`.
+* Return JSON responses for API endpoints.
+* Express combines the route prefix (`/products`) with the Router's route (`/`) to form the final endpoint (`GET /products`).
+
+

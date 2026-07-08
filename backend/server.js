@@ -1,12 +1,6 @@
-const express = require("express");
-
-const app = express();
+const app = require("./src/app");
 
 const PORT = 3000;
-
-app.get("/", (req, res) => {
-  res.send("Welcome to Queens' Touch Beauty Shop API! 🚀");
-});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

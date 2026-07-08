@@ -4,7 +4,7 @@ I'd also write this note at the end of your summary:
 
 Important: The terminal running node server.js must remain open. If you close it, the backend stops running. Press Ctrl + C in the terminal when you want to stop the server.
 
-
+All codes should be written in the backend- directory
 
 
 # 📚 Queens' Touch Beauty Shop

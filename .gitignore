@@ -1,0 +1,45 @@
+# Global project ignores
+node_modules/
+.env
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code settings
+.vscode/
+
+# Flutter/Dart/Pub related
+queens/**/doc/api/
+queens/**/ios/Flutter/.last_build_id
+queens/.dart_tool/
+queens/.flutter-plugins-dependencies
+queens/.pub-cache/
+queens/.pub/
+queens/build/
+queens/coverage/
+
+# Symbolication related
+queens/app.*.symbols
+
+# Obfuscation related
+queens/app.*.map.json
+
+# Android Studio build artifacts
+queens/android/app/debug
+queens/android/app/profile
+queens/android/app/release

@@ -1,16 +1,20 @@
+const products = [];
 const getAllProducts = (req, res) => {
-  res.json({
-    message: "List of products will appear here."
-  });
-};
+       const id = req.params.id;
 
+    res.json(products[id]);
+};
 const createProduct = (req, res) => {
-  res.json({
-    message: "Product created successfully!"
-  });
+    console.log(req.body);
+products.push(req.body);
+    res.json({
+        message: "Product created successfully!",
+        product: req.body,
+    });
 };
 
 module.exports = {
-  getAllProducts,
-  createProduct,
+    getAllProducts,
+    getProductById,
+    createProduct,
 };

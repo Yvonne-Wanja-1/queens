@@ -4,6 +4,13 @@ const getAllProducts = (req, res) => {
   });
 };
 
+const createProduct = (req, res) => {
+  res.json({
+    message: "Product created successfully!"
+  });
+};
+
 module.exports = {
   getAllProducts,
+  createProduct,
 };

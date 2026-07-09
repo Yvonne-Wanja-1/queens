@@ -1,0 +1,363 @@
+Absolutely! Here's the next documentation section in the same style as your previous notes.
+
+---
+
+# Queens' Touch Beauty Shop
+
+# Backend Developer Notes
+
+## Session 6 – Multiple Controller Functions and Routes
+
+**Date:** 9 July 2026
+
+---
+
+# Objective
+
+The objective of this session was to continue building the Products API by introducing multiple controller functions and multiple routes.
+
+Instead of having only one endpoint (`GET /products`), we began preparing the application to support CRUD (Create, Read, Update, Delete) operations.
+
+This session also reinforced the concepts of Routes and Controllers and explained why professional developers organize their code into reusable patterns.
+
+---
+
+# Review
+
+At the beginning of this session, the application only supported one endpoint:
+
+```text
+GET /products
+```
+
+The route forwarded the request to the controller:
+
+```text
+Browser
+    │
+    ▼
+productRoutes.js
+    │
+    ▼
+getAllProducts()
+```
+
+The controller responded with:
+
+```json
+{
+    "message": "List of products will appear here."
+}
+```
+
+---
+
+# Understanding CRUD
+
+Most backend applications perform four common operations.
+
+These are known as **CRUD**.
+
+| Letter | Meaning | Example           |
+| ------ | ------- | ----------------- |
+| C      | Create  | Add a new product |
+| R      | Read    | View products     |
+| U      | Update  | Edit a product    |
+| D      | Delete  | Remove a product  |
+
+For products, these operations eventually become:
+
+| Method | Endpoint        | Purpose          |
+| ------ | --------------- | ---------------- |
+| GET    | `/products`     | Get all products |
+| GET    | `/products/:id` | Get one product  |
+| POST   | `/products`     | Create a product |
+| PUT    | `/products/:id` | Update a product |
+| DELETE | `/products/:id` | Delete a product |
+
+At this stage, the endpoints only return messages because the application is not yet connected to a database.
+
+---
+
+# Step 1 – Add Another Controller Function
+
+Open:
+
+```text
+backend/src/controllers/productController.js
+```
+
+Initially, the file contained only one controller function:
+
+```javascript
+const getAllProducts = (req, res) => {
+    res.json({
+        message: "List of products will appear here."
+    });
+};
+
+module.exports = {
+    getAllProducts,
+};
+```
+
+A second controller function was added:
+
+```javascript
+const createProduct = (req, res) => {
+    res.json({
+        message: "Product created successfully!"
+    });
+};
+```
+
+The exports were updated:
+
+```javascript
+module.exports = {
+    getAllProducts,
+    createProduct,
+};
+```
+
+---
+
+# Why Export Multiple Functions?
+
+`module.exports` makes functions available to other JavaScript files.
+
+Previously, only one function was available:
+
+```javascript
+module.exports = {
+    getAllProducts,
+};
+```
+
+Now two functions are available:
+
+```javascript
+module.exports = {
+    getAllProducts,
+    createProduct,
+};
+```
+
+Think of the controller as a toolbox.
+
+Before:
+
+```text
+Product Controller
+│
+└── getAllProducts()
+```
+
+After:
+
+```text
+Product Controller
+│
+├── getAllProducts()
+└── createProduct()
+```
+
+As the application grows, more controller functions will be added, such as:
+
+```text
+Product Controller
+│
+├── getAllProducts()
+├── getProductById()
+├── createProduct()
+├── updateProduct()
+└── deleteProduct()
+```
+
+---
+
+# Step 2 – Import the New Controller Function
+
+Open:
+
+```text
+backend/src/routes/productRoutes.js
+```
+
+Originally, the file imported one function:
+
+```javascript
+const { getAllProducts } = require("../controllers/productController");
+```
+
+It was updated to import two functions:
+
+```javascript
+const {
+    getAllProducts,
+    createProduct,
+} = require("../controllers/productController");
+```
+
+---
+
+# Why Did We Update the Import?
+
+The controller now exports two functions.
+
+The routes file imports whichever controller functions it needs.
+
+This allows the route to forward different requests to different controller functions.
+
+---
+
+# Step 3 – Create a POST Route
+
+Previously, the routes file contained:
+
+```javascript
+router.get("/", getAllProducts);
+```
+
+A second route was added:
+
+```javascript
+router.post("/", createProduct);
+```
+
+The completed routes file became:
+
+```javascript
+const express = require("express");
+
+const {
+    getAllProducts,
+    createProduct,
+} = require("../controllers/productController");
+
+const router = express.Router();
+
+// GET /products
+router.get("/", getAllProducts);
+
+// POST /products
+router.post("/", createProduct);
+
+module.exports = router;
+```
+
+---
+
+# Understanding HTTP Methods
+
+Notice that both routes use the same URL:
+
+```text
+/products
+```
+
+The difference is the HTTP method.
+
+| Method | URL         | Controller         |
+| ------ | ----------- | ------------------ |
+| GET    | `/products` | `getAllProducts()` |
+| POST   | `/products` | `createProduct()`  |
+
+Express uses both the URL and the HTTP method to determine which controller should handle the request.
+
+---
+
+# Routes and Controllers Revisited
+
+During this session, we focused on understanding the responsibilities of each layer.
+
+## Route
+
+The route:
+
+* Receives the request.
+* Identifies the HTTP method and endpoint.
+* Chooses the correct controller.
+
+The route **does not** contain business logic.
+
+---
+
+## Controller
+
+The controller:
+
+* Receives the request from the route.
+* Performs the requested action.
+* Sends the response back to the client.
+
+The controller contains the application's logic.
+
+---
+
+# Key Principle Learned
+
+One sentence summarizes the relationship:
+
+> **A route decides WHO handles the request. A controller decides WHAT happens to the request.**
+
+---
+
+# Recognizing the Pattern
+
+One of the most important lessons from this session was understanding that professional Express applications follow reusable templates.
+
+A typical controller file follows this pattern:
+
+```javascript
+const functionOne = (req, res) => {
+    // Logic
+};
+
+const functionTwo = (req, res) => {
+    // Logic
+};
+
+module.exports = {
+    functionOne,
+    functionTwo,
+};
+```
+
+A typical routes file follows this pattern:
+
+```javascript
+const express = require("express");
+
+const {
+    functionOne,
+    functionTwo,
+} = require("../controllers/exampleController");
+
+const router = express.Router();
+
+router.get("/", functionOne);
+router.post("/", functionTwo);
+
+module.exports = router;
+```
+
+Only the function names and endpoints change.
+
+The overall structure remains the same across different features such as Products, Customers, Orders, Services, Employees, and Appointments.
+
+---
+
+# Important Concepts Learned
+
+* CRUD represents the four basic operations performed by most backend applications.
+* A controller can export multiple functions.
+* A routes file can import multiple controller functions.
+* Different HTTP methods can use the same URL but perform different actions.
+* Routes should only forward requests.
+* Controllers should contain the application's business logic.
+* Express applications become easier to maintain by following reusable route and controller templates rather than rewriting the architecture for every feature.
+
+---
+
+I think these notes are becoming a real developer journal. A few months from now, you'll be able to look back at them and remember not just *what* you built, but *why* you built it that way. That's a habit that pays off throughout your career.

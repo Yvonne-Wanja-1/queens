@@ -1,45 +1,129 @@
-const products = [];
+const pool = require("../database/db");
 
-const getAllProducts = (req, res) => {
-    res.json(products);
+// GET /products
+const getAllProducts = async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM products");
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error retrieving products",
+        });
+    }
 };
 
-const getProductById = (req, res) => {
-    const id = req.params.id;
+// GET /products/:id
+const getProductById = async (req, res) => {
+    try {
+        const id = req.params.id;
 
-    res.json(products[id]);
+        const result = await pool.query(
+            "SELECT * FROM products WHERE id = $1",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Product not found",
+            });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error retrieving product",
+        });
+    }
 };
 
-const createProduct = (req, res) => {
-    console.log(req.body);
+// POST /products
+const createProduct = async (req, res) => {
+    try {
+        const { name, price, type, size, quantity } = req.body;
 
-    products.push(req.body);
+        const result = await pool.query(
+            `INSERT INTO products (name, price, type, size, quantity)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [name, price, type, size, quantity]
+        );
 
-    res.json({
-        message: "Product created successfully!",
-        product: req.body,
-    });
+        res.status(201).json({
+            message: "Product created successfully!",
+            product: result.rows[0],
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error creating product",
+        });
+    }
 };
 
-const updateProduct = (req, res) => {
-    const id = req.params.id;
+// PUT /products/:id
+const updateProduct = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { name, price, type, size, quantity } = req.body;
 
-    products[id] = req.body;
+        const result = await pool.query(
+            `UPDATE products
+             SET name = $1,
+                 price = $2,
+                 type = $3,
+                 size = $4,
+                 quantity = $5
+             WHERE id = $6
+             RETURNING *`,
+            [name, price, type, size, quantity, id]
+        );
 
-    res.json({
-        message: "Product updated successfully!",
-        product: products[id],
-    });
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Product not found",
+            });
+        }
+
+        res.json({
+            message: "Product updated successfully!",
+            product: result.rows[0],
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error updating product",
+        });
+    }
 };
 
-const deleteProduct = (req, res) => {
-    const id = req.params.id;
+// DELETE /products/:id
+const deleteProduct = async (req, res) => {
+    try {
+        const id = req.params.id;
 
-    products.splice(id, 1);
+        const result = await pool.query(
+            "DELETE FROM products WHERE id = $1 RETURNING *",
+            [id]
+        );
 
-    res.json({
-        message: "Product deleted successfully!",
-    });
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Product not found",
+            });
+        }
+
+        res.json({
+            message: "Product deleted successfully!",
+            product: result.rows[0],
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error deleting product",
+        });
+    }
 };
 
 module.exports = {

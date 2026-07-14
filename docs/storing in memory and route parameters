@@ -1,0 +1,436 @@
+Absolutely! This is a perfect stopping point because you've completed the **Create** and **Read** parts of CRUD using an in-memory array. Here's your documentation in the same style as your previous sessions.
+
+---
+
+# Queens' Touch Beauty Shop
+
+# Backend Developer Notes
+
+## Session 8 – Receiving Data, Storing Products in Memory, and Route Parameters
+
+**Date:** 9 July 2026
+
+---
+
+# Objective
+
+The objective of this session was to make the API behave more like a real backend by:
+
+* Receiving JSON data from the client.
+* Storing products temporarily in memory.
+* Returning stored products.
+* Retrieving a single product using a URL parameter.
+* Understanding the difference between `req.body` and `req.params`.
+
+At this stage, the application still does **not** use a database. Products are stored in a JavaScript array while the server is running.
+
+---
+
+# Testing Different HTTP Methods
+
+Until now, the browser had only been used to test:
+
+```text
+GET /products
+```
+
+A browser automatically sends a **GET** request whenever a URL is entered into the address bar.
+
+To test other HTTP methods such as:
+
+* POST
+* PUT
+* DELETE
+
+Postman was installed.
+
+Postman allows the developer to choose the HTTP method before sending the request.
+
+This is why backend developers use API testing tools instead of relying only on a web browser.
+
+---
+
+# Sending the First POST Request
+
+Using Postman, the following request was sent:
+
+```text
+POST http://localhost:3000/products
+```
+
+Initially, the controller returned:
+
+```json
+{
+    "message": "Product created successfully!"
+}
+```
+
+This confirmed that the POST route was working correctly.
+
+---
+
+# Parsing JSON Requests
+
+Express does not automatically understand JSON data sent by a client.
+
+To enable JSON parsing, the following middleware was added inside:
+
+```text
+backend/src/app.js
+```
+
+```javascript
+app.use(express.json());
+```
+
+This middleware tells Express to automatically convert incoming JSON into a JavaScript object.
+
+Without this middleware:
+
+```javascript
+req.body
+```
+
+would be:
+
+```javascript
+undefined
+```
+
+After adding the middleware, JSON sent from Postman became available inside:
+
+```javascript
+req.body
+```
+
+---
+
+# Understanding req.body
+
+The controller was updated:
+
+```javascript
+const createProduct = (req, res) => {
+    console.log(req.body);
+
+    res.json({
+        message: "Product created successfully!",
+        product: req.body,
+    });
+};
+```
+
+`req.body` contains the data sent by the client.
+
+Example request from Postman:
+
+```json
+{
+    "name": "Shampoo",
+    "price": 850,
+    "category": "Hair Care"
+}
+```
+
+Inside the controller:
+
+```javascript
+req.body
+```
+
+became:
+
+```javascript
+{
+    name: "Shampoo",
+    price: 850,
+    category: "Hair Care"
+}
+```
+
+The response returned the same object back to Postman, confirming that the backend had successfully received the data.
+
+---
+
+# Request vs Response
+
+One of the most important concepts learned during this session was the difference between requests and responses.
+
+| Express Object | Purpose                                |
+| -------------- | -------------------------------------- |
+| `req.body`     | Receives incoming data from the client |
+| `res.json()`   | Sends data back to the client          |
+
+A simple way to remember this is:
+
+```text
+Request → Comes IN
+
+Response → Goes OUT
+```
+
+---
+
+# Creating an In-Memory Database
+
+Since PostgreSQL has not yet been introduced, products were stored inside a JavaScript array.
+
+At the top of:
+
+```text
+backend/src/controllers/productController.js
+```
+
+the following was added:
+
+```javascript
+const products = [];
+```
+
+This array acts as temporary storage while the server is running.
+
+---
+
+# Why the Array Is Outside the Functions
+
+The products array was declared outside the controller functions.
+
+```javascript
+const products = [];
+```
+
+This ensures that every request shares the same array.
+
+If the array were created inside a controller function, it would be recreated every time a request was received and all previously stored products would be lost.
+
+---
+
+# Storing Products
+
+Inside `createProduct()`, the following line was added:
+
+```javascript
+products.push(req.body);
+```
+
+`.push()` adds a new item to the end of an array.
+
+Example:
+
+Before:
+
+```javascript
+[]
+```
+
+After the first POST request:
+
+```javascript
+[
+    {
+        name: "Shampoo",
+        price: 850,
+        category: "Hair Care"
+    }
+]
+```
+
+After another POST request:
+
+```javascript
+[
+    {
+        name: "Shampoo",
+        price: 850,
+        category: "Hair Care"
+    },
+    {
+        name: "Conditioner",
+        price: 1200,
+        category: "Hair Care"
+    }
+]
+```
+
+The array continues growing as new products are added.
+
+---
+
+# Returning All Products
+
+Previously, `getAllProducts()` returned a fixed message.
+
+It was updated to:
+
+```javascript
+const getAllProducts = (req, res) => {
+    res.json(products);
+};
+```
+
+Instead of returning a hardcoded response, the controller now returns the contents of the products array.
+
+This made the API dynamic for the first time.
+
+---
+
+# Retrieving One Product
+
+A new controller function was added:
+
+```javascript
+const getProductById = (req, res) => {
+    const id = req.params.id;
+
+    res.json(products[id]);
+};
+```
+
+This controller returns a single product based on the value contained in the URL.
+
+---
+
+# Understanding Route Parameters
+
+A new route was added:
+
+```javascript
+router.get("/:id", getProductById);
+```
+
+The colon (`:`) indicates a route parameter.
+
+Example:
+
+```text
+GET /products/0
+```
+
+Inside Express:
+
+```javascript
+req.params.id
+```
+
+becomes:
+
+```javascript
+"0"
+```
+
+If the products array contains:
+
+```javascript
+[
+    { name: "Shampoo" },
+    { name: "Conditioner" }
+]
+```
+
+then:
+
+```javascript
+products[0]
+```
+
+returns:
+
+```javascript
+{
+    name: "Shampoo"
+}
+```
+
+---
+
+# req.body vs req.params
+
+A major concept learned during this session was the difference between request bodies and route parameters.
+
+## req.body
+
+Used when the client sends data inside the request.
+
+Example:
+
+```json
+{
+    "name": "Shampoo",
+    "price": 850
+}
+```
+
+Controller:
+
+```javascript
+req.body
+```
+
+---
+
+## req.params
+
+Used when the client sends information through the URL.
+
+Example:
+
+```text
+GET /products/5
+```
+
+Controller:
+
+```javascript
+req.params.id
+```
+
+Result:
+
+```javascript
+"5"
+```
+
+---
+
+# Current Product API
+
+At the end of this session, the Products API supports:
+
+| Method | Endpoint        | Purpose                              |
+| ------ | --------------- | ------------------------------------ |
+| GET    | `/products`     | Return all products stored in memory |
+| GET    | `/products/:id` | Return one product by its index      |
+| POST   | `/products`     | Add a new product to memory          |
+
+The application now supports the **Create** and **Read** parts of CRUD.
+
+The remaining operations (**Update** and **Delete**) will be implemented in the next session.
+
+---
+
+# Key Concepts Learned
+
+* Browsers primarily send GET requests.
+* Postman allows testing of all HTTP methods.
+* `express.json()` parses incoming JSON requests.
+* `req.body` contains data sent by the client.
+* `res.json()` sends data back to the client.
+* Arrays can be used as temporary storage before introducing a database.
+* `.push()` adds new items to an array.
+* `req.params` retrieves values from the URL.
+* Route parameters allow dynamic endpoints such as `/products/:id`.
+* A backend can return dynamic data instead of hardcoded responses by storing and retrieving information from memory.
+
+---
+
+## 🎉 Milestone Reached
+
+At this point, your backend is no longer just returning static messages. It can:
+
+* Accept data from a client.
+* Store that data while the server is running.
+* Return all stored products.
+* Return a specific product using a URL parameter.
+
+This is your **first functional REST API**, even though it doesn't use a database yet. The next step will be to complete CRUD by implementing **Update (PUT)** and **Delete (DELETE)** before replacing the in-memory array with PostgreSQL.

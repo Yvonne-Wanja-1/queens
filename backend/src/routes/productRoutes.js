@@ -1,4 +1,5 @@
 const express = require("express");
+const authenticateToken = require("../middleware/authMiddleware");
 const { getAllProducts , 
     createProduct,
     getProductById,
@@ -9,12 +10,14 @@ const { getAllProducts ,
 
 const router = express.Router();
 
-// GET /products
+// Public routes
 router.get("/", getAllProducts);
-router.post("/", createProduct);
 router.get("/:id", getProductById);
-router.put("/:id", updateProduct);
-router.delete("/:id", deleteProduct);
+
+// Protected routes
+router.post("/", authenticateToken, createProduct);
+router.put("/:id", authenticateToken, updateProduct);
+router.delete("/:id", authenticateToken, deleteProduct);
 
 
 module.exports = router;

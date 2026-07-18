@@ -4,11 +4,12 @@ const pool = require("../database/db");
 const getAllProducts = async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM products");
-        res.json(result.rows);
+
+        res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: "Error retrieving products",
+            message: "Error retrieving products.",
         });
     }
 };
@@ -16,7 +17,13 @@ const getAllProducts = async (req, res) => {
 // GET /products/:id
 const getProductById = async (req, res) => {
     try {
-        const id = req.params.id;
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+            return res.status(400).json({
+                message: "Invalid product ID.",
+            });
+        }
 
         const result = await pool.query(
             "SELECT * FROM products WHERE id = $1",
@@ -25,15 +32,15 @@ const getProductById = async (req, res) => {
 
         if (result.rows.length === 0) {
             return res.status(404).json({
-                message: "Product not found",
+                message: "Product not found.",
             });
         }
 
-        res.json(result.rows[0]);
+        res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: "Error retrieving product",
+            message: "Error retrieving product.",
         });
     }
 };
@@ -42,6 +49,25 @@ const getProductById = async (req, res) => {
 const createProduct = async (req, res) => {
     try {
         const { name, price, type, size, quantity } = req.body;
+
+        // Validation
+        if (!name || !type || !size || price == null || quantity == null) {
+            return res.status(400).json({
+                message: "All fields are required.",
+            });
+        }
+
+        if (price <= 0) {
+            return res.status(400).json({
+                message: "Price must be greater than 0.",
+            });
+        }
+
+        if (quantity < 0) {
+            return res.status(400).json({
+                message: "Quantity cannot be negative.",
+            });
+        }
 
         const result = await pool.query(
             `INSERT INTO products (name, price, type, size, quantity)
@@ -57,7 +83,7 @@ const createProduct = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: "Error creating product",
+            message: "Error creating product.",
         });
     }
 };
@@ -65,8 +91,34 @@ const createProduct = async (req, res) => {
 // PUT /products/:id
 const updateProduct = async (req, res) => {
     try {
-        const id = req.params.id;
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+            return res.status(400).json({
+                message: "Invalid product ID.",
+            });
+        }
+
         const { name, price, type, size, quantity } = req.body;
+
+        // Validation
+        if (!name || !type || !size || price == null || quantity == null) {
+            return res.status(400).json({
+                message: "All fields are required.",
+            });
+        }
+
+        if (price <= 0) {
+            return res.status(400).json({
+                message: "Price must be greater than 0.",
+            });
+        }
+
+        if (quantity < 0) {
+            return res.status(400).json({
+                message: "Quantity cannot be negative.",
+            });
+        }
 
         const result = await pool.query(
             `UPDATE products
@@ -82,18 +134,18 @@ const updateProduct = async (req, res) => {
 
         if (result.rows.length === 0) {
             return res.status(404).json({
-                message: "Product not found",
+                message: "Product not found.",
             });
         }
 
-        res.json({
+        res.status(200).json({
             message: "Product updated successfully!",
             product: result.rows[0],
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: "Error updating product",
+            message: "Error updating product.",
         });
     }
 };
@@ -101,7 +153,13 @@ const updateProduct = async (req, res) => {
 // DELETE /products/:id
 const deleteProduct = async (req, res) => {
     try {
-        const id = req.params.id;
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+            return res.status(400).json({
+                message: "Invalid product ID.",
+            });
+        }
 
         const result = await pool.query(
             "DELETE FROM products WHERE id = $1 RETURNING *",
@@ -110,18 +168,18 @@ const deleteProduct = async (req, res) => {
 
         if (result.rows.length === 0) {
             return res.status(404).json({
-                message: "Product not found",
+                message: "Product not found.",
             });
         }
 
-        res.json({
+        res.status(200).json({
             message: "Product deleted successfully!",
             product: result.rows[0],
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: "Error deleting product",
+            message: "Error deleting product.",
         });
     }
 };

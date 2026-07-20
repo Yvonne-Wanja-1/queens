@@ -1,4 +1,5 @@
 const authRoutes = require("./routes/authRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 const logger = require("./middleware/logger");
 const pool = require("./database/db");
 const express = require("express");
@@ -10,7 +11,7 @@ app.use(logger);
 app.use(express.json());
 app.use("/products", productRoutes);
 app.use("/auth", authRoutes);
-
+app.use("/cart", cartRoutes);
 pool.query("SELECT NOW()", (err, result) => {
     if (err) {
         console.error("Database connection failed:", err);

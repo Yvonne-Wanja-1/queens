@@ -238,7 +238,7 @@ const deleteProduct = async (req, res) => {
         });
     }
 };
-x
+
 module.exports = {
     getAllProducts,
     getProductById,

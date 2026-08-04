@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../middleware/upload");
 const authorizeAdmin = require("../middleware/authorizeAdmin");
 const authenticateToken = require("../middleware/authMiddleware");
 const { getAllProducts , 
@@ -19,6 +20,7 @@ router.post(
     "/",
     authenticateToken,
     authorizeAdmin,
+    upload.single("image"),
     createProduct
 );
 
@@ -26,6 +28,7 @@ router.put(
     "/:id",
     authenticateToken,
     authorizeAdmin,
+    upload.single("image"),
     updateProduct
 );
 

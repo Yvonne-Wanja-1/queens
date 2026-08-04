@@ -8,14 +8,20 @@ const express = require("express");
 const productRoutes = require("./routes/productRoutes");
 const installmentRoutes = require("./routes/installmentRoutes");
 const app = express();
+const promoRoutes = require("./routes/promoRoutes");
+
+const path = require("path");
 
 // Middleware
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(logger);
 app.use(express.json());
+app.use("/inventory", inventoryRoutes);
 app.use("/installments", installmentRoutes);
 app.use("/products", productRoutes);
 app.use("/auth", authRoutes);
 app.use("/cart", cartRoutes);
+app.use("/promo", promoRoutes);
 app.use("/orders", orderRoutes);
 app.use("/reviews", reviewRoutes);
 pool.query("SELECT NOW()", (err, result) => {

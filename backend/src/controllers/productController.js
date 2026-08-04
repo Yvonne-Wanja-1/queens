@@ -1,29 +1,107 @@
 const pool = require("../database/db");
 
-// GET /products
+// ===============================
+// GET ALL PRODUCTS
+// Search + Filter + Sort + Pagination
+// ===============================
 const getAllProducts = async (req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM products");
+        const {
+            search,
+            type,
+            minPrice,
+            maxPrice,
+            sort,
+            page = 1,
+            limit = 10,
+        } = req.query;
 
-        res.status(200).json(result.rows);
+        let query = "SELECT * FROM products WHERE 1=1";
+        const values = [];
+        let index = 1;
+
+        // Search by product name
+        if (search) {
+            query += ` AND name ILIKE $${index}`;
+            values.push(`%${search}%`);
+            index++;
+        }
+
+        // Filter by type
+        if (type) {
+            query += ` AND type = $${index}`;
+            values.push(type);
+            index++;
+        }
+
+        // Minimum price
+        if (minPrice) {
+            query += ` AND price >= $${index}`;
+            values.push(minPrice);
+            index++;
+        }
+
+        // Maximum price
+        if (maxPrice) {
+            query += ` AND price <= $${index}`;
+            values.push(maxPrice);
+            index++;
+        }
+
+        // Sorting
+        switch (sort) {
+            case "price_asc":
+                query += " ORDER BY price ASC";
+                break;
+
+            case "price_desc":
+                query += " ORDER BY price DESC";
+                break;
+
+            case "name":
+                query += " ORDER BY name ASC";
+                break;
+
+            case "newest":
+                query += " ORDER BY id DESC";
+                break;
+
+            default:
+                query += " ORDER BY id ASC";
+        }
+
+        // Pagination
+        const offset = (page - 1) * limit;
+
+        query += ` LIMIT $${index} OFFSET $${index + 1}`;
+
+        values.push(limit);
+        values.push(offset);
+
+        const result = await pool.query(query, values);
+
+        res.status(200).json({
+            page: Number(page),
+            limit: Number(limit),
+            totalProducts: result.rows.length,
+            products: result.rows,
+        });
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Error retrieving products.",
         });
     }
 };
 
-// GET /products/:id
+// ===============================
+// GET PRODUCT BY ID
+// ===============================
 const getProductById = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-
-        if (isNaN(id)) {
-            return res.status(400).json({
-                message: "Invalid product ID.",
-            });
-        }
+        const id = req.params.id;
 
         const result = await pool.query(
             "SELECT * FROM products WHERE id = $1",
@@ -37,96 +115,71 @@ const getProductById = async (req, res) => {
         }
 
         res.status(200).json(result.rows[0]);
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Error retrieving product.",
         });
     }
 };
 
-// POST /products
+// ===============================
+// CREATE PRODUCT
+// ===============================
 const createProduct = async (req, res) => {
     try {
         const { name, price, type, size, quantity } = req.body;
 
-        // Validation
-        if (!name || !type || !size || price == null || quantity == null) {
+        const image = req.file
+    ? req.file.filename
+    : null;
+
+        if (!name || !price || !type || !size || !quantity) {
             return res.status(400).json({
                 message: "All fields are required.",
             });
         }
 
-        if (price <= 0) {
-            return res.status(400).json({
-                message: "Price must be greater than 0.",
-            });
-        }
-
-        if (quantity < 0) {
-            return res.status(400).json({
-                message: "Quantity cannot be negative.",
-            });
-        }
-
         const result = await pool.query(
-            `INSERT INTO products (name, price, type, size, quantity)
-             VALUES ($1, $2, $3, $4, $5)
-             RETURNING *`,
+            `INSERT INTO products
+            (name, price, type, size, quantity)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *`,
             [name, price, type, size, quantity]
         );
 
         res.status(201).json({
-            message: "Product created successfully!",
+            message: "Product created successfully.",
             product: result.rows[0],
         });
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Error creating product.",
         });
     }
 };
 
-// PUT /products/:id
+// ===============================
+// UPDATE PRODUCT
+// ===============================
 const updateProduct = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-
-        if (isNaN(id)) {
-            return res.status(400).json({
-                message: "Invalid product ID.",
-            });
-        }
-
+        const id = req.params.id;
         const { name, price, type, size, quantity } = req.body;
-
-        // Validation
-        if (!name || !type || !size || price == null || quantity == null) {
-            return res.status(400).json({
-                message: "All fields are required.",
-            });
-        }
-
-        if (price <= 0) {
-            return res.status(400).json({
-                message: "Price must be greater than 0.",
-            });
-        }
-
-        if (quantity < 0) {
-            return res.status(400).json({
-                message: "Quantity cannot be negative.",
-            });
-        }
 
         const result = await pool.query(
             `UPDATE products
-             SET name = $1,
-                 price = $2,
-                 type = $3,
-                 size = $4,
-                 quantity = $5
+             SET
+                name = $1,
+                price = $2,
+                type = $3,
+                size = $4,
+                quantity = $5
              WHERE id = $6
              RETURNING *`,
             [name, price, type, size, quantity, id]
@@ -139,30 +192,30 @@ const updateProduct = async (req, res) => {
         }
 
         res.status(200).json({
-            message: "Product updated successfully!",
+            message: "Product updated successfully.",
             product: result.rows[0],
         });
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Error updating product.",
         });
     }
 };
 
-// DELETE /products/:id
+// ===============================
+// DELETE PRODUCT
+// ===============================
 const deleteProduct = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-
-        if (isNaN(id)) {
-            return res.status(400).json({
-                message: "Invalid product ID.",
-            });
-        }
+        const id = req.params.id;
 
         const result = await pool.query(
-            "DELETE FROM products WHERE id = $1 RETURNING *",
+            `DELETE FROM products
+             WHERE id = $1
+             RETURNING *`,
             [id]
         );
 
@@ -173,17 +226,19 @@ const deleteProduct = async (req, res) => {
         }
 
         res.status(200).json({
-            message: "Product deleted successfully!",
+            message: "Product deleted successfully.",
             product: result.rows[0],
         });
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Error deleting product.",
         });
     }
 };
-
+x
 module.exports = {
     getAllProducts,
     getProductById,

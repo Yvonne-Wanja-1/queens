@@ -132,6 +132,10 @@ const createProduct = async (req, res) => {
     try {
         const { name, price, type, size, quantity } = req.body;
 
+        const image = req.file
+    ? req.file.filename
+    : null;
+
         if (!name || !price || !type || !size || !quantity) {
             return res.status(400).json({
                 message: "All fields are required.",
@@ -234,7 +238,7 @@ const deleteProduct = async (req, res) => {
         });
     }
 };
-
+x
 module.exports = {
     getAllProducts,
     getProductById,
